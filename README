@@ -1,0 +1,12 @@
+= OpenCityStreets
+= http://opencitystreets.com
+= 0.0.1
+
+Next Steps:
+- Choose a database backend (MySQL, PostgreSQL, MSSQL - just kidding)
+- Design the database (maybe MySQL Workbench or UML?)
+- Start coding :o
+
+Please provide enough infos in your commit message so other developers can follow and understand your changes
+If you think the commit message it to short for your big changes add an entry in the changelog file (markdown)
+Commit often! Even if you commit 10 times a day. It's okay
