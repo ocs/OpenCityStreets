@@ -179,7 +179,7 @@ while ($reader->read())
 
 mysql_query("UNLOCK TABLES");
 
-echo "\nThat took ".time() - $start_time . " seconds.\n";
+echo "\nThat took ". (time() - $start_time) . " seconds.\n";
 echo "Done with ".memory_get_peak_usage()." used\n";
 
 class TagFinder
