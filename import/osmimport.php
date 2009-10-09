@@ -5,19 +5,38 @@
 * OpenStreetMap XML Dump Importer
 *
 * Created by Nick Stallman <nick@nickstallman.net>
-* TagFinder() and minor changes by Aaron Wolfe
+* TagFinder() and minor awesome changes by Aaron Wolfe
 * 
 */
 
+
+// Settings
+
+$set_osm_filename = 'uk-090930.osm';
+$set_db_server = ':/var/run/mysqld/mysqld.sock';   // use a socket if on localhost! location varies, see socket setting in mysql's my.conf
+$set_db_user = 'root';
+$set_db_pass = 'hmmm';
+$set_db_db = 'osm1';
+$set_log_interval = 100000;
+
+// End of settings
+
+
 $reader = new XMLReader();
-$reader->open('uk-090930.osm');
+if (!$reader->open($set_osm_filename)) 
+	die("Error opening OSM file\n\n"); 
 
-mysql_connect('', 'root', 'radnor22');
-mysql_select_db('ocs');
+if (!mysql_connect($set_db_server,$set_db_user,$set_db_pass)) 
+	die("Error connecting to database\n\n"); 
 
-$things = 0;
-$start_time = time();
+if (!mysql_select_db($set_db_db)) 
+	die("Error selecting database '$set_db_db'\n\n"); 
+
+$nodes_in = 0;
+$ways_in = 0;
+
 $tagfinder = new TagFinder();
+$runtimer = new RunTimer();
 
 mysql_query("LOCK TABLES nodes, nodes_to_ways, tags, tags_to_nodes, tags_to_ways, ways WRITE");
 
@@ -33,9 +52,9 @@ while ($reader->read())
 
 	if ($reader->name == 'node')
 	{
-		$things++;
-		if ($things % 100000 == 0)
-			print_perf($things, $start_time);
+		$nodes_in++;
+		if (($nodes_in + $ways_in) % $set_log_interval == 0)
+			$runtimer->log_interval($nodes_in, $ways_in, $tagfinder->hits(), $tagfinder->misses());
 
 		$node = array();
 		$tags = array();
@@ -101,9 +120,9 @@ while ($reader->read())
 		}
 
 	} elseif ($reader->name == 'way') {
-		$things++;
-		if ($things % 100000 == 0)
-			print_perf($things, $start_time);
+		$ways_in++;
+		if (($nodes_in + $ways_in) % $set_log_interval == 0)
+			$runtimer->log_interval($nodes_in, $ways_in, $tagfinder->hits(), $tagfinder->misses());
 
 		$way = array();
 		$tags = array();
@@ -177,16 +196,20 @@ while ($reader->read())
 	}
 }
 
-mysql_query("UNLOCK TABLES");
+$reader->close();
 
-echo "\nThat took ". (time() - $start_time) . " seconds.\n";
-echo "Done with ".memory_get_peak_usage()." used\n";
+mysql_query("UNLOCK TABLES");
+mysql_close();
+
+echo 'Done in ' . $runtimer->get_runtime() . ' seconds, using ' . round(memory_get_peak_usage() / 1024) . "KB.\n";
+
+
 
 class TagFinder
 {
-	public $tagcache = array();
-	public $hit = 0;
-	public $miss = 0;
+	private $tagcache = array();
+        private $hit = 0;
+        private $miss = 0;
 
 	public function hits()
 	{
@@ -197,7 +220,7 @@ class TagFinder
 	{
 		return $this->miss;
 	}
-
+	
 	public function find_tag($name, $value)
 	{
 		if (isset($this->tagcache[$name."|".$value]))
@@ -213,13 +236,57 @@ class TagFinder
 	}
 }
 
+
 function esc($data)
 {
 	return mysql_real_escape_string($data);
 }
 
-function print_perf($things, $started)
+
+
+class RunTimer
 {
-	$persec = round($things / (time() - $started));
-	echo "$things: $persec/sec\n";
+	private $start_time = 0;
+	private $last_time = 0;
+	private $last_things = 0;
+	private $last_tfhit = 0;
+	private $last_tfmiss = 0;
+
+	function __construct() 
+	{
+		$this->start_time = $this->microtime_float();
+		$this->last_time = $this->start_time;
+	}
+
+
+ 	public function log_interval($nodes_in, $ways_in, $tfhit, $tfmiss)
+ 	{
+		$now = $this->microtime_float();
+		$things = $nodes_in + $ways_in;
+
+		$persec_overall = round($things / ($now - $this->start_time));
+		$persec_interval = round(($things - $this->last_things) / ($now - $this->last_time)); 
+		$tagcache_overall = round($tfhit / ($tfhit + $tfmiss) * 100, 3);
+		$tagcache_interval = round(($tfhit - $this->last_tfhit) / (($tfhit + $tfmiss) - ($this->last_tfhit + $this->last_tfmiss)) * 100, 3);
+
+		echo "nodes: $nodes_in\tways: $ways_in\tspeed: $persec_overall/sec ($persec_interval/sec)\ttags cached: $tagcache_overall% ($tagcache_interval%)\n";		
+
+		$this->last_time = $now;
+		$this->last_things = $things;
+		$this->last_tfhit = $tfhit;
+		$this->last_tfmiss = $tfmiss; 
+
+ 	} 
+
+	public function get_runtime()
+	{
+ 	 	return(round(($this->microtime_float() - $this->start_time), 2));
+	}
+
+	private function microtime_float()
+	{
+    		list($usec, $sec) = explode(" ", microtime());
+    		return ((float)$usec + (float)$sec);
+	}
+
 }
