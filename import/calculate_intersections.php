@@ -20,13 +20,19 @@ $set_log_interval = 100000;
 
 // End of settings
 
+if (!mysql_connect($set_db_server, $set_db_user, $set_db_pass))
+	die("Error connecting to database\n\n");
+
+if (!mysql_select_db($set_db_db))
+	die("Error selecting database '$set_db_db'\n\n"); 
+
 $way_cache = array();
 
 $result = mysql_query('SELECT node_id FROM nodes');
 $count = mysql_num_rows($result);
 $done = 0;
 
-while ($row = mysql_fetch_array($result)
+while ($row = mysql_fetch_array($result))
 {
 	$done++;
 
