@@ -24,13 +24,14 @@ if (!mysql_connect($set_db_server, $set_db_user, $set_db_pass))
 	die("Error connecting to database\n\n");
 
 if (!mysql_select_db($set_db_db))
-	die("Error selecting database '$set_db_db'\n\n"); 
+	die("Error selecting database '$set_db_db'\n\n");
 
 $way_cache = array();
 
 $result = mysql_query('SELECT node_id FROM nodes');
 $count = mysql_num_rows($result);
 $done = 0;
+$start_time = time();
 
 while ($row = mysql_fetch_array($result))
 {
@@ -55,7 +56,13 @@ while ($row = mysql_fetch_array($result))
 			}
 		}
 	}
+
+	if ($done % $set_log_interval === 0)
+	{
+		echo "Done $done. ".round($done / (time() - $start_time))."/sec\n";
+	}
 }
+echo "Inserting";
 
 $inserts = array();
 $inserts_count = 0;
@@ -72,7 +79,9 @@ foreach ($way_cache as $way_1 => $ways)
 		mysql_query('INSERT INTO intersections VALUES '.implode(',', $inserts));
 		$inserts = array();
 		$inserts_count = 0;
+		echo '.';
 	}
 }
+echo "\n";
 
 mysql_query('INSERT INTO intersections VALUES '.implode(',', $inserts));
