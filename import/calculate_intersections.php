@@ -5,13 +5,14 @@
 * Intersections Calculator
 *
 * Created by Nick Stallman <nick@nickstallman.net>
-* 
+*
+* Note: Will use a large amount of memory
+*
 */
 
 
 // Settings
 
-$set_osm_filename = 'uk-090930.osm';
 $set_db_server = ':/var/run/mysqld/mysqld.sock';   // use a socket if on localhost! location varies, see socket setting in mysql's my.conf
 $set_db_user = 'root';
 $set_db_pass = '';
@@ -56,10 +57,11 @@ while ($row = mysql_fetch_array($result))
 			}
 		}
 	}
+	mysql_free_result($result2);
 
 	if ($done % $set_log_interval === 0)
 	{
-		echo "Done $done. ".round($done / (time() - $start_time))."/sec\n";
+		echo "Done $done. ".round($done / (time() - $start_time))."/sec".round($done / $count * 100, 2)."%\n";
 	}
 }
 echo "Inserting";
@@ -76,7 +78,7 @@ foreach ($way_cache as $way_1 => $ways)
 
 	if ($inserts_count > 10000)
 	{
-		mysql_query('INSERT INTO intersections VALUES '.implode(',', $inserts));
+		mysql_query('INSERT INTO ways_intersections VALUES '.implode(',', $inserts));
 		$inserts = array();
 		$inserts_count = 0;
 		echo '.';
@@ -84,4 +86,4 @@ foreach ($way_cache as $way_1 => $ways)
 }
 echo "\n";
 
-mysql_query('INSERT INTO intersections VALUES '.implode(',', $inserts));
+mysql_query('INSERT INTO ways_intersections VALUES '.implode(',', $inserts));
