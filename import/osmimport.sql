@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS `ways` (
 CREATE TABLE IF NOT EXISTS `ways_intersections` (
   `way_1` int(10) unsigned NOT NULL,
   `way_2` int(10) unsigned NOT NULL,
-  PRIMARY KEY  (`way_1`,`way_2`)
+  KEY `way_1` (`way_1`),
+  KEY `way_2` (`way_2`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
