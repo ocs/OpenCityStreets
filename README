@@ -2,8 +2,11 @@
 = http://opencitystreets.com
 = 0.0.1
 
-Next Steps:
-- Choose a database backend (MySQL, PostgreSQL, MSSQL - just kidding)
+See import directory for tools to create a database for testing.
+OSM data for UK (the subset we are working with) can be found at http://nick.old-dev.openstreetmap.org/downloads/planet/uk-090930.osm.bz2
+
+Next steps
+- Finish with the game spec 
 - Design the database (maybe MySQL Workbench or UML?)
 - Start coding :o
 
