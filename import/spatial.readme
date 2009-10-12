@@ -1,0 +1,28 @@
+Adding spatial searching capabilites to ways and nodes:
+
+Since I am not sure how we are going to want this in the "official" database, I won't update the schema file.
+Here is how to get a database like the one I am playing with.
+
+--------------
+
+(steps 1-4 are optional, they just add a POINT column for the nodes.  Not sure if we need this, it isn't used
+by anything right now)
+
+1.  Create DB using schema from git
+
+2.  alter table nodes add node_pt POINT NOT NULL;
+
+3.  Do import using osmimport-spatial.php
+
+4.  alter table nodes add SPATIAL INDEX(node_pt); 
+
+------------- 
+
+5.  alter table ways ADD way_geom LINESTRING NOT NULL;
+
+6.  Run buildwaygeoms.php
+
+7.  alter table ways add SPATIAL INDEX(way_geom);
+
+(don't add the indexes before importing, it makes importing take forever.  they don't take too long to add after)
+
