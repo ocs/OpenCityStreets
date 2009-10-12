@@ -5,18 +5,16 @@ Here is how to get a database like the one I am playing with.
 
 --------------
 
-(steps 1-4 are optional, they just add a POINT column for the nodes.  Not sure if we need this, it isn't used
-by anything right now)
-
 1.  Create DB using schema from git
+
+(steps 2 and 4 are optional, they just add a POINT column for the nodes.  Not sure if we need this, it isn't used
+by anything right now)
 
 2.  alter table nodes add node_pt POINT NOT NULL;
 
-3.  Do import using osmimport-spatial.php
+3.  Do import using osmimport-spatial.php   (or osmimport.php if you only want way geoms (no node_pt))
 
 4.  alter table nodes add SPATIAL INDEX(node_pt); 
-
-------------- 
 
 5.  alter table ways ADD way_geom LINESTRING NOT NULL;
 
