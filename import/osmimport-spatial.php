@@ -105,7 +105,9 @@ while ($reader->read())
 			}
 		}
 
-		mysql_query("INSERT INTO `nodes` (`node_id`, `node_lat`, `node_lng`, `node_version`, `node_pt`) VALUES ({$node['id']}, {$node['lat']}, {$node['lng']}, {$node['version']}), GeomFromText('POINT({$node['lat']} {$node['lng']})'))");
+		mysql_query("INSERT INTO `nodes` (`node_id`, `node_lat`, `node_lng`, `node_version`, `node_pt`) 
+				VALUES ({$node['id']}, {$node['lat']}, {$node['lng']}, {$node['version']}, 
+				GeomFromText('POINT({$node['lat']} {$node['lng']})'))");
 
 		if (!empty($tags))
 		{
@@ -188,7 +190,7 @@ while ($reader->read())
 
 			foreach ($tags as $tag)
 			{
-				$query .= '('.$tag.', '.$node['id'].'), ';
+				$query .= '('.$tag.', '.$way['id'].'), ';
 			}
 
 			mysql_query(substr($query, 0, -2));

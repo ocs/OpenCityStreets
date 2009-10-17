@@ -188,7 +188,7 @@ while ($reader->read())
 
 			foreach ($tags as $tag)
 			{
-				$query .= '('.$tag.', '.$node['id'].'), ';
+				$query .= '('.$tag.', '.$way['id'].'), ';
 			}
 
 			mysql_query(substr($query, 0, -2));
