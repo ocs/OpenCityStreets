@@ -5,6 +5,10 @@
 | -------------------------------------------------------------------
 | This file specifies which systems should be loaded by default.
 |
+|
+| 10/22/09 - Added config for our modified redux auth - AAW
+|
+|
 | In order to keep the framework as light-weight as possible only the
 | absolute minimal resources are loaded by default. For example,
 | the database is not connected to automatically since no assumption
@@ -39,8 +43,7 @@
 |	$autoload['libraries'] = array('database', 'session', 'xmlrpc');
 */
 
-$autoload['libraries'] = array();
-
+$autoload['libraries'] = array('database', 'session', 'redux_auth', 'form_validation', 'ocs_logging');
 
 /*
 | -------------------------------------------------------------------
@@ -51,8 +54,7 @@ $autoload['libraries'] = array();
 |	$autoload['helper'] = array('url', 'file');
 */
 
-$autoload['helper'] = array();
-
+$autoload['helper'] = array('url', 'form', 'html');
 
 /*
 | -------------------------------------------------------------------
@@ -79,8 +81,7 @@ $autoload['plugin'] = array();
 |
 */
 
-$autoload['config'] = array();
-
+$autoload['config'] = array('opencitystreets', 'email');
 
 /*
 | -------------------------------------------------------------------
@@ -108,8 +109,7 @@ $autoload['language'] = array();
 |
 */
 
-$autoload['model'] = array();
-
+$autoload['model'] = array('redux_auth_model');
 
 
 /* End of file autoload.php */

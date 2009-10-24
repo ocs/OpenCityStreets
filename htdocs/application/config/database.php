@@ -34,21 +34,21 @@
 | the active record class
 */
 
-$active_group = "default";
+$active_group = "auth";
 $active_record = TRUE;
 
-$db['default']['hostname'] = "localhost";
-$db['default']['username'] = "";
-$db['default']['password'] = "";
-$db['default']['database'] = "";
-$db['default']['dbdriver'] = "mysql";
-$db['default']['dbprefix'] = "";
-$db['default']['pconnect'] = TRUE;
-$db['default']['db_debug'] = TRUE;
-$db['default']['cache_on'] = FALSE;
-$db['default']['cachedir'] = "";
-$db['default']['char_set'] = "utf8";
-$db['default']['dbcollat'] = "utf8_general_ci";
+$db['auth']['hostname'] = "localhost";
+$db['auth']['username'] = "ocs";
+$db['auth']['password'] = "ocs";
+$db['auth']['database'] = "ocs_auth";
+$db['auth']['dbdriver'] = "mysql";
+$db['auth']['dbprefix'] = "";
+$db['auth']['pconnect'] = TRUE;
+$db['auth']['db_debug'] = TRUE;
+$db['auth']['cache_on'] = FALSE;
+$db['auth']['cachedir'] = "";
+$db['auth']['char_set'] = "utf8";
+$db['auth']['dbcollat'] = "utf8_general_ci";
 
 
 /* End of file database.php */

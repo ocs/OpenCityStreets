@@ -1,0 +1,47 @@
+
+p {
+	font-weight: normal; 
+	font-family:"Tahoma",Arial,Serif;
+	padding: 0px; 
+	margin: 0px;
+}
+
+p.error {
+		border: 1px solid #555555;
+		background-color: #eeee55;
+		margin: 10px;
+		padding: 10px;
+	}
+
+p.success {
+                border: 1px solid #555555;
+                background-color: #55ee55;
+                margin: 10px;
+                padding: 10px;
+        }
+
+td {
+	font-weight: normal; 
+	font-family:"Tahoma",Arial,Serif;
+	font-size: 14px;
+}
+
+
+
+h1  { 
+	font-weight: normal; 
+	font-family:"Tahoma",Arial,Serif;
+	font-size: 18px;
+}
+
+div#header {
+}
+
+
+div#footer {
+}
+
+
+div#content {
+}
+
