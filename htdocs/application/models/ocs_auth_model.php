@@ -427,20 +427,22 @@ class ocs_auth_model extends Model
 	    $identity_column   = $this->config->item('auth_identity_column','ocs');
 	    $users_table       = $this->config->item('auth_user_table','ocs');
 	    
+	    $this->ocs_logging->log_message('info',"lets check '$identity'");
+	    
 	    if ($identity === false)
 	    {
 	        return false;
 	    }
 	    
 	    $query = $this->db->select('activation_code')
-	    ->where($identity_column, $identity)
-	    ->get($users_table);
+	    	->where($identity_column, $identity)
+	    	->get($users_table);
 		
 		if ($query->num_rows() == 1)
 		{
 			// user exists
 			
-			$row = $query->result();
+			$row = array_pop($query->result());
 			
 			if (empty($row->activation_code))
 			{
@@ -479,6 +481,13 @@ class ocs_auth_model extends Model
 	        return false;
 	    }
 
+	    // dont let users who aren't active (or don't exist) reset passwords - AAW
+	    if ($this->identity_is_active($this->find_identity_by_column('email',$email)) === false)
+	    {
+	    	$this->ocs_logging->log_message('info',"password reset attempt by invalid/inactive user '$email'");
+	        return false;
+	    }
+	    
 		$key = $this->hash_password(microtime().$email);
 		
 		$data = array('forgotten_password_code' => $key);

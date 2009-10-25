@@ -99,8 +99,8 @@ class ocs_auth
 	/**
 	* forgotten password feature
 	*
-	* @return void
-	* @author Mathew of Redux Auth, many changes AAW
+	*
+	* @author rewrite by Aaron Wolfe
 	**/
 	
 	public function forgotten_password($email)
@@ -111,8 +111,14 @@ class ocs_auth
 		
 		if ($useridentity === false)
 		{
-			$this->ci->ocs_logging->log_message('info',"no matching account '$email'");
+			$this->ci->ocs_logging->log_message('info',"no matching valid account '$email'");
 			return array(false,'No matching account was found.');
+		}
+		
+		if ($this->ci->ocs_auth_model->identity_is_active($useridentity) === false)
+		{
+			$this->ci->ocs_logging->log_message('info',"attempt to reset password on disabled account '$email'");
+			return array(false,'That account is not active.');
 		}
 		
 		// function now returns key directly on success
