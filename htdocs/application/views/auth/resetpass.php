@@ -31,6 +31,14 @@
 
         </tr>
 
+        <tr>
+
+            <td>Confirm password</td>
+
+            <td><?php echo form_password('password2', set_value('password2')); ?></td>
+
+        </tr>
+
     </tbody>
 
     <tfoot>

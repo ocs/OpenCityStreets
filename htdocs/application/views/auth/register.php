@@ -26,7 +26,7 @@
 
             <td>Email Address</td>
 
-            <td><?php echo form_input('email', set_value('email')); ?></td>
+            <td><?php echo form_input('email'); ?></td>
 
         </tr>
 
@@ -37,6 +37,28 @@
             <td><?php echo form_password('password'); ?></td>
 
         </tr>
+
+        <tr>
+
+            <td>Confirm</td>
+
+            <td><?php echo form_password('password2'); ?></td>
+
+        </tr>
+
+        <tr>
+
+            	<td>Language</td>
+
+            	<td>
+
+			
+
+		</td>
+        </tr>
+
+
+
       </tbody>
    </table>
 

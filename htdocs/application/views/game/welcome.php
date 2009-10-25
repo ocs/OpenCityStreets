@@ -1,5 +1,12 @@
 <P>
-You are logged in as: <?= $user_profile->username; ?> (<?= $user_profile->email; ?>)
+<B>You are logged in.</B>
+<P>&nbsp;<P>
+Your profile<P>&nbsp;<P>
+
+Username: <?= $user_profile->username; ?><br>
+Email: <?= $user_profile->email; ?><br>
+Language: <?= $user_profile->language; ?><br>
+
 </p>
 <P>
 <h1>Coming soon... a game client</h1>

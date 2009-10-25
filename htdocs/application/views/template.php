@@ -24,7 +24,10 @@
 
 		<div id='footer'>
 			<P>&nbsp;<P>
-			<?= $this->config->item('gamename','ocs'); ?> client v<?= $this->config->item('version','ocs'); ?>
+			<B><I><?= $this->config->item('motd','ocs'); ?> </I></B>
+			
+				
+
 		</div>
 
 

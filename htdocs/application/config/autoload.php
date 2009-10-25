@@ -7,7 +7,7 @@
 |
 |
 | 10/22/09 - Added config for our modified redux auth - AAW
-|
+| 10/24/09 - changes for redux auth rewrite and language support- AAW
 |
 | In order to keep the framework as light-weight as possible only the
 | absolute minimal resources are loaded by default. For example,
@@ -43,7 +43,7 @@
 |	$autoload['libraries'] = array('database', 'session', 'xmlrpc');
 */
 
-$autoload['libraries'] = array('database', 'session', 'redux_auth', 'form_validation', 'ocs_logging');
+$autoload['libraries'] = array('database', 'session', 'ocs_auth', 'form_validation', 'ocs_logging');
 
 /*
 | -------------------------------------------------------------------
@@ -109,7 +109,7 @@ $autoload['language'] = array();
 |
 */
 
-$autoload['model'] = array('redux_auth_model');
+$autoload['model'] = array('ocs_auth_model');
 
 
 /* End of file autoload.php */
