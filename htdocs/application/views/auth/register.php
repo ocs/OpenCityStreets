@@ -51,9 +51,13 @@
             	<td>Language</td>
 
             	<td>
+            	<select name='language' id='language'>
+			<?php foreach($languages as $lang):?>
 
-			
+<option><?php echo $lang;?>
 
+<?php endforeach;?>
+				</select>
 		</td>
         </tr>
 

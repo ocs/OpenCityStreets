@@ -108,7 +108,7 @@
         if ($this->form_validation->run() == false)
         {
         	$data['recaptcha'] = $this->recaptcha->get_html();
-			// $data['languages'] = $this->ocs_auth->get_languages($client_ip);
+			$data['languages'] = $this->ocs_auth->get_languages($this->input->ip_address());
             $data['content'] = $this->load->view('auth/register', $data, true);
             $this->load->view('template', $data);
         }

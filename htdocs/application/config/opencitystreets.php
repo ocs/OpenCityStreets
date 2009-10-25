@@ -51,6 +51,7 @@ $config['ocs']['email_subj_lostpass'] = "Open City Streets password reset reques
 $config['ocs']['auth_group_table'] = 'user_groups';
 $config['ocs']['auth_user_table'] = 'users';
 $config['ocs']['auth_meta_table'] = 'user_meta';
+$config['ocs']['auth_language_table'] = 'languages';
 $config['ocs']['auth_default_group'] = 'Players';
 $config['ocs']['auth_meta_join'] = 'user_id';
 $config['ocs']['auth_meta_columns'] = array('language','timezone_id');

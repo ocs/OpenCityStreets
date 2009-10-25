@@ -414,6 +414,49 @@ class ocs_auth_model extends Model
 	}
 	
 	
+	/**
+	* Check if user is active
+	*
+	* @author Aaron Wolfe
+	*
+	* looks for presence of activation code in record of given identity, which indicates the account is disabled or awaiting confirmation
+	**/
+	
+	public function identity_is_active($identity = false)
+	{
+	    $identity_column   = $this->config->item('auth_identity_column','ocs');
+	    $users_table       = $this->config->item('auth_user_table','ocs');
+	    
+	    if ($identity === false)
+	    {
+	        return false;
+	    }
+	    
+	    $query = $this->db->select('activation_code')
+	    ->where($identity_column, $identity)
+	    ->get($users_table);
+		
+		if ($query->num_rows() == 1)
+		{
+			// user exists
+			
+			$row = $query->result();
+			
+			if (empty($row->activation_code))
+			{
+				// active user
+				return true;
+			}
+			else
+			{
+				// user is deactivated
+				return false;
+			}
+		}
+		
+		// identity not found
+		return false;
+	}
 	
 	
 	/**
@@ -435,21 +478,7 @@ class ocs_auth_model extends Model
 	    	$this->ocs_logging->log_message('info','no email specified?');
 	        return false;
 	    }
-	    
-	    // original won't set reset key if one already exists.  not sure the logic here, do we care? - aaw
-	    /*
-	    $query = $this->db->select('forgotten_password_code')
-	    ->where('email', $email)
-	    ->limit(1)
-	    ->get($users_table);
-	    
-	    $result = $query->row();
-		
-		$code = $result->forgotten_password_code;
-		
-		if (empty($code))
-		{
-		*/
+
 		$key = $this->hash_password(microtime().$email);
 		
 		$data = array('forgotten_password_code' => $key);
@@ -466,15 +495,6 @@ class ocs_auth_model extends Model
 			$this->ocs_logging->log_message('error','failed to insert forgotten pw key');
 			return false;
 		}
-		//leftovers, see above
-		/*		}
-		else
-		{
-		$this->ocs_logging->log_message('info','forgotten pw key exists');
-		return false;
-		}
-		*/
-		
 	}
 	
 	
@@ -636,7 +656,9 @@ class ocs_auth_model extends Model
 	/**
 	* login
 	*
-	* @author Mathew
+	* rewrite by AAW
+	*
+	* checks credentials, true for valid
 	**/
 	
 	public function login($identity = false, $password = false)
@@ -644,13 +666,20 @@ class ocs_auth_model extends Model
 	    $identity_column   = $this->config->item('auth_identity_column','ocs');
 	    $users_table       = $this->config->item('auth_user_table','ocs');
 	    
-	    if ($identity === false || $password === false || $this->identity_check($identity) == false)
+	    if ($identity === false || $password === false)
 	    {
-	    	$this->ocs_logging->log_message('info',"login attempt by invalid user '$identity'");
+	    	$this->ocs_logging->log_message('info','login attempt with null credentials?');
 	        return false;
 	    }
 	    
-	    $query = $this->db->select($identity_column.', password, activation_code')
+	    if ( $this->identity_is_active($identity) == false)
+	    {
+	    	$this->ocs_logging->log_message('info',"login attempt by invalid/inactive user '$identity'");
+	        return false;
+	    }	
+	    
+	    
+	    $query = $this->db->select('password')
 	    ->where($identity_column, $identity)
 	    ->get($users_table);
 	    
@@ -660,23 +689,43 @@ class ocs_auth_model extends Model
         {
             $password = $this->hash_password_db($identity, $password);
             
-            if (!empty($result->activation_code)) 
-            {
-            	$this->ocs_logging->log_message('info',"user '$identity' attempt to login while disabled/not regged");
-            	return false; 
-            }
-            
     		if ($result->password === $password)
     		{
     			$this->ocs_logging->log_message('info',"user '$identity' logged in");
-    		    $this->session->set_userdata($identity_column,  $result->{$identity_column});
+    		    $this->session->set_userdata($identity_column,  $identity);
     		    return true;
+    		}
+    		else
+    		{
+    			$this->ocs_logging->log_message('info',"user '$identity' bad password");
+    			return false;
     		}
         }
         
-        $this->ocs_logging->log_message('info',"user '$identity' bad password");
+        $this->ocs_logging->log_message('info',"user '$identity' verified but couldn't select password?");
 		return false;		
 	}
+
+
+   	/**
+	* get_languages - return array of languages
+	*
+	* @author Aaron Wolfe
+	**/
 	
-	
+	public function get_languages()
+	{
+	    $language_table       = $this->config->item('auth_language_table','ocs');
+	    $languages = array();
+	    
+	    $query = $this->db->get($language_table);
+		
+		foreach ($query->result() as $row)
+		{
+			$languages[$row->lang_name]=$row->lang_extendedname;
+		}
+		
+		return($languages);
+	}
+		
 }

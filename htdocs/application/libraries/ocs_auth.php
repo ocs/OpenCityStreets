@@ -299,4 +299,19 @@ class ocs_auth
 	    return $this->ci->ocs_auth_model->profile($identity);
 	}
 	
+	
+	/**
+	* get_languages - return array of available language choices
+	* accepts ip address, future versions may recommend based on geoip
+	*
+	* @author Aaron Wolfe
+	**/
+	
+	public function get_languages($client_ip = false)
+	{
+		return $this->ci->ocs_auth_model->get_languages();
+	}
+		
+	
+	
 }
