@@ -269,6 +269,40 @@
 	}
 	
 	
+	function delete()
+	{
+		// require user is logged in
+		if ($this->ocs_auth->logged_in() === false)   
+        {
+            redirect('auth/login/notloggedin');
+        }
+        
+        $this->form_validation->set_rules('password', 'Password', 'required');
+				
+		$this->form_validation->set_error_delimiters('<p class="error">', '</p>');
+		
+		if ($this->form_validation->run() == false)
+		{
+			$data['content'] = $this->load->view('auth/delete', null, true);
+			$this->load->view('template', $data);
+		}
+		else
+		{
+			$password  = $this->input->post('password');
+			list($result,$reason) = $this->ocs_auth->delete_account($password);
+			
+			if ($result === false)
+			{
+				$this->session->set_flashdata('message', "<p class='error'>$reason</p>");
+				redirect('auth/delete');
+			}
+			
+			$this->logout();
+		}
+	}
+	
+	
+	
 	function username_check($username)
 	{
 		// prevent duplicates in registration, needs localization like everything else

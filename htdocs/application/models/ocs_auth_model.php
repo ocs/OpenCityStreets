@@ -40,8 +40,6 @@ class ocs_auth_model extends Model
 	* Password functions
 	* 
 	* Hash password : Hashes the password to be stored in the database.
-	* Hash password db : This function takes a password and validates it
-	* against an entry in the users table.
 	* Salt : Generates a random salt value.
 	*
 	* @author Mathew of Redux Auth, minor changes by AAW
@@ -70,45 +68,7 @@ class ocs_auth_model extends Model
 		return $password;		
 	}
 	
-	
-	/**
-	* This function takes a password and validates it
-	* against an entry in the users table.
-	*
-	* @author Mathew of Redux Auth, minor changes by AAW
-	**/
-	
-	public function hash_password_db($identity = false, $password = false)
-	{
-	    $identity_column   = $this->config->item('auth_identity_column','ocs');
-	    $users_table       = $this->config->item('auth_user_table','ocs');
-	    $salt_length       = $this->config->item('auth_salt_length','ocs');
-	    
-	    if ($identity === false || $password === false)
-	    {
-	        return false;
-	    }
-	    
-	    $query  = $this->db->select('password')
-	    ->where($identity_column, $identity)
-	    ->get($users_table);
-	    
-        $result = $query->row();
-        
-		if ($query->num_rows() !== 1)
-		{
-			// no user or duplicate users?, either way, no login
-		    return false;
-	    }
-	    
-		$salt = substr($result->password, 0, $salt_length);
-		
-		$password = $salt . substr(sha1($salt . $password), 0, -$salt_length);
-        
-		return $password;
-	}
-	
-	
+			
 	/**
 	* Generates a random salt value.
 	*
@@ -217,7 +177,7 @@ class ocs_auth_model extends Model
 	
 	/**
 	* Deactivate
-	*
+	* sets an activation code in the user's record, effectively preventing login or password reset
 	* @author Mathew, changes AAW
 	* now returns activation code directly on success
 	**/
@@ -249,56 +209,10 @@ class ocs_auth_model extends Model
 		}
 	}
 	
-	
-	/**
-	* change password
-	*
-	* @author Mathew, minor changes AAW 
-	* want to rewrite this, logic for comparing old doesn't belong in here
-	**/
-	
-	public function change_password($identity = false, $old = false, $new = false)
-	{
-	    $identity_column   = $this->config->item('auth_identity_column','ocs');
-	    $users_table       = $this->config->item('auth_user_table','ocs');
-	    
-	    if ($identity === false || $old === false || $new === false)
-	    {
-	        return false;
-	    }
-	    
-	    $query  = $this->db->select('password')
-	    ->where($identity_column, $identity)
-	    ->get($users_table);
-        
-        if ($this->db->affected_rows() != 1)
-		{
-			$this->ocs_logging->log_message('error','could not find user account');
-			return false;
-		}          	   
 		
-	    $result = $query->row();
-	    
-	    $db_password = $result->password; 
-	    $old         = $this->hash_password_db($identity, $old);
-	    $new         = $this->hash_password($new);
-	    
-	    if ($db_password === $old)
-	    {
-	        $data = array('password' => $new);
-	        
-	        $this->db->update($users_table, $data, array($identity_column => $identity));
-	        
-	        return ($this->db->affected_rows() == 1) ? true : false;
-	    }
-	    
-	    return false;
-	}
-	
-	
 	
 	/**
-	* Checks username.
+	* Checks username exists
 	*
 	* @author Mathew of Redux Auth
 	**/
@@ -325,7 +239,7 @@ class ocs_auth_model extends Model
 	
 	
 	/**
-	* Checks email.
+	* Checks email exists
 	*
 	* @author Mathew of Redux Auth
 	**/
@@ -386,8 +300,8 @@ class ocs_auth_model extends Model
 	
 	
 	/**
-	* Identity check
-	*
+	* Identity check - checks existance of user base on identity column
+	* 
 	* @author Mathew of Redux Auth
 	**/
 	
@@ -426,8 +340,6 @@ class ocs_auth_model extends Model
 	{
 	    $identity_column   = $this->config->item('auth_identity_column','ocs');
 	    $users_table       = $this->config->item('auth_user_table','ocs');
-	    
-	    $this->ocs_logging->log_message('info',"lets check '$identity'");
 	    
 	    if ($identity === false)
 	    {
@@ -620,6 +532,8 @@ class ocs_auth_model extends Model
 			return false;
 		}
 		
+		$this->ocs_logging->log_message('info', "inserted user record $id");
+		
 		$data = array($meta_join => $id);
 		
 		if (!empty($additional_columns))
@@ -650,12 +564,18 @@ class ocs_auth_model extends Model
 		
 		if ($this->db->affected_rows() > 0)
 		{
-			$this->ocs_logging->log_message('info',"new registration, $username/$email");
+			$this->ocs_logging->log_message('info',"new registration, $id / $username / $email");
 			return true;
 		}
 		else
 		{
-			$this->ocs_logging->log_message('error','insert new user meta record failed');
+			$this->ocs_logging->log_message('error',"insert new user meta record failed for userid $id, attempting to remove user");
+			
+			if ($this->delete_user($id) === false)
+			{
+				$this->ocs_logging->log_message('error',"also failed to remove new user record $id, not good.");
+			}
+			
 			return false;
 		}
 	}
@@ -667,7 +587,7 @@ class ocs_auth_model extends Model
 	*
 	* rewrite by AAW
 	*
-	* checks credentials, true for valid
+	* checks credentials, returns true and performs login actions on success
 	**/
 	
 	public function login($identity = false, $password = false)
@@ -675,47 +595,158 @@ class ocs_auth_model extends Model
 	    $identity_column   = $this->config->item('auth_identity_column','ocs');
 	    $users_table       = $this->config->item('auth_user_table','ocs');
 	    
+	    // we have paramters
 	    if ($identity === false || $password === false)
 	    {
-	    	$this->ocs_logging->log_message('info','login attempt with null credentials?');
+	    	$this->ocs_logging->log_message('error','login attempt with null credentials?');
 	        return false;
 	    }
 	    
-	    if ( $this->identity_is_active($identity) == false)
+	    // user exists?
+	    $user_id = $this->get_user_id($identity);
+	    if ($user_id === false)
 	    {
-	    	$this->ocs_logging->log_message('info',"login attempt by invalid/inactive user '$identity'");
+	    	$this->ocs_logging->log_message('info',"login attempt by invalid user '$identity'");
 	        return false;
 	    }	
 	    
+	    // user is active?
+	    if ($this->identity_is_active($identity) === false)
+	    {
+	    	$this->ocs_logging->log_message('info',"login attempt by disabled user '$identity'");
+	        return false;
+	    }
 	    
-	    $query = $this->db->select('password')
-	    ->where($identity_column, $identity)
-	    ->get($users_table);
+	    // user knows their password?
+	    if ($this->check_password($identity,$password) === true)
+	    {
+    		$this->ocs_logging->log_message('info',"user '$identity' logged in");
+    		
+    		// handle login.. for now just setup session
+    	    $this->session->set_userdata($identity_column,  $identity);
+    	    $this->session->set_userdata('user_id', $user_id);
+    	    return true;
+    	}
+    	
+        $this->ocs_logging->log_message('info',"login attempt with bad password by user '$identity'");
+    	return false;		
+	}
+
+	
+	/**
+	* check_password 
+	*
+	* @author Aaron Wolfe
+	*/
+	
+	
+	public function check_password($identity = false,$password = false)
+	{
+		$users_table		= $this->config->item('auth_user_table','ocs');
+		$identity_column	= $this->config->item('auth_identity_column','ocs');
+		$salt_length		= $this->config->item('auth_salt_length','ocs');
+		
+		if (($identity === false) || ($password === false))
+		{
+			return false;
+		}
+		
+		$query = $this->db->select('password')
+	    	->where($identity_column, $identity)
+	    	->get($users_table);
 	    
         $result = $query->row();
         
         if ($query->num_rows() == 1)
         {
-            $password = $this->hash_password_db($identity, $password);
-            
-    		if ($result->password === $password)
-    		{
-    			$this->ocs_logging->log_message('info',"user '$identity' logged in");
-    		    $this->session->set_userdata($identity_column,  $identity);
-    		    return true;
+        	$salt = substr($result->password, 0, $salt_length);
+        	$password = $salt . substr(sha1($salt . $password), 0, -$salt_length);
+        	
+            if ($password == $result->password)
+            {
+            	return true;
     		}
-    		else
-    		{
-    			$this->ocs_logging->log_message('info',"user '$identity' bad password");
-    			return false;
-    		}
-        }
-        
-        $this->ocs_logging->log_message('info',"user '$identity' verified but couldn't select password?");
-		return false;		
+    	}
+    	
+    	return false;
 	}
-
-
+	
+	
+	
+	
+	/** 
+	* get_user_id - lookup by identity
+	*
+	* @author Aaron Wolfe
+	**/
+	
+	public function get_user_id($identity = false)
+	{
+		$users_table		= $this->config->item('auth_user_table','ocs');
+		$identity_column	= $this->config->item('auth_identity_column','ocs');
+		
+		if ($identity === false)
+		{
+			return false;
+		}
+		
+		$query = $this->db->select('user_id')
+	    	->where($identity_column, $identity)
+	    	->get($users_table);
+	    
+	    if ($query->num_rows() == 1)
+		{
+			$row = array_pop($query->result());
+			
+			return($row->user_id);
+		}
+		
+		return false;
+	}
+	
+	
+	
+	/** 
+	* delete_user - delete a user by id
+	*
+	* @author Aaron Wolfe
+	**/
+	
+	public function delete_user($id = false)
+	{
+		$users_table	= $this->config->item('auth_user_table','ocs');
+		$meta_table		= $this->config->item('auth_meta_table','ocs');
+	    $meta_join		= $this->config->item('auth_meta_join','ocs');
+	    
+	    $this->ocs_logging->log_message('error',"asked to delete user id '$id'");
+	    
+		if ($id === false)
+		{
+			return false;
+		}
+		
+		// remove any meta data
+		$this->db->delete($meta_table, array($meta_join => $id)); 
+		
+		if ($this->db->affected_rows() != 1)
+		{
+			$this->ocs_logging->log_message('error', $this->db->affected_rows() . " rows affected when deleting meta data for user $id");
+		}
+		
+		// remove user record
+		$result = $this->db->delete($users_table, array('user_id' => $id)); 
+	
+		if ($this->db->affected_rows() != 1)
+		{
+			$this->ocs_logging->log_message('error', $this->db->affected_rows() . " rows affected when deleting user $id");
+			return false;
+		}
+	
+		$this->ocs_logging->log_message('info',"deleted user $id");
+		return true;
+	}
+	
+	
    	/**
 	* get_languages - return array of languages
 	*

@@ -43,6 +43,5 @@
 &nbsp;&nbsp;&nbsp;
 <A href="<?= site_url('auth/lostpass') ?>">Lost Password</a>
 
-
-<?php echo form_close(''); ?>
+<P>&nbsp;</P><P>
 

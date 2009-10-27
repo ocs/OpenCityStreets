@@ -84,16 +84,43 @@ class ocs_auth
 	}
 	
 	
+	
 	/**
-	* Change password.
+	* Delete account
 	*
-	* @return void
-	* @author Mathew of Redux Auth
+	* @author Aaron Wolfe
 	**/
-	public function change_password($identity, $old, $new)
+	public function delete_account($password = false)
 	{
-        return $this->ci->ocs_auth_model->change_password($identity, $old, $new);
+		// for now all we have is the user itself to remove
+		
+		$session = $this->ci->config->item('auth_identity_column','ocs');
+	    $identity = $this->ci->session->userdata($session);
+		
+		$user_id = $this->ci->ocs_auth_model->get_user_id($identity);
+		
+		if ($user_id === false)
+		{
+			return array(false,'user not found');
+		}
+				
+		$idcheck = $this->ci->ocs_auth_model->check_password($identity,$password);
+		
+		if ($idcheck === false)
+		{
+			return array(false,'password incorrect');
+		}
+		
+		$result = $this->ci->ocs_auth_model->delete_user($user_id);
+		
+		if ($result === false)
+		{
+			return array(false,'error in model while deleting user account');
+		}
+		
+        return array(true,null);
 	}
+	
 	
 	
 	/**
