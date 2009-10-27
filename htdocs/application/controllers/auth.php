@@ -34,9 +34,10 @@
  	 function __construct()
  	 {
  	 	 // All other controllers should inherit OCS_Controller, so that users are sent to this one if they are not logged in.
- 	 	 // This controller obviously must not.
+ 	 	 // This controller obviously must not, so any functions that should be called while logged in (delete account) must check themselves
  	 	 
  	 	 parent::Controller();	
+ 	 	 $this->lang->load('auth');
  	 }
  	 
 
@@ -69,7 +70,7 @@
 			else
 			{
 				
-				$this->session->set_flashdata('message', "<p class='error'>Invalid login</p>");
+				$this->set_msg('error',$this->lang->line('auth_invalid_login'));
 				redirect('auth/login/failed');
 			}
 		}		
@@ -82,7 +83,7 @@
 		// logs user out
 		
 		$this->ocs_auth->logout();
-		$this->session->set_flashdata('message', "<p class='success'>You are now logged out of " . $this->config->item('gamename','ocs')  . '.</p>');
+		$this->set_msg('success', $this->lang->line('auth_logged_out') . ' of ' . $this->config->item('gamename','ocs'));
 		redirect('auth/login/loggedout');
 	}
 
@@ -132,7 +133,7 @@
 			{
 				// not sure how we want to be displaying errors..
 				// need localization, standards, etc.. for now:
-				$this->session->set_flashdata('message', "<p class='error'>$reason</p>");
+				$this->set_msg('error',$reason);
 				
 				redirect('auth/register');
 			}
@@ -141,64 +142,35 @@
 	
 	
 	
-	function activate()
+	function activate($code = false)
 	{
-		// process activation codes from reg email
-		
-		$this->form_validation->set_rules('code', 'Verification Code', 'required');
-		$this->form_validation->set_error_delimiters('<p class="error">', '</p>');
-		
-		if ($this->form_validation->run() == false)
-		{
-			$data['content'] = $this->load->view('auth/activate', null, true);
-			$this->load->view('template', $data);
-		}
-		else
-		{
-			$code = $this->input->post('code');
-			$activate = $this->ocs_auth->activate($code);
-			
-			if ($activate)
-			{
-				$this->session->set_flashdata('message', '<p class="success">Your account has been activated, you may now log in.</p>');
-				redirect('auth/login/activated');
-			}
-			else
-			{
-				$this->session->set_flashdata('message', '<p class="error">That code is either invalid or has already been used.</p>');
-				redirect('auth/activate');
-			}
-		}
-	}
-	
-	
-	function activatebyclick($code = false)
-	{
-		
-		// handle URL sent in reg email
-		
+		// handle code coming from URL or from form
 		if ($code === false)
 		{
-			$data['content'] = $this->load->view('auth/activate', null, true);
-			$this->load->view('template', $data);
+			$code = $this->input->post('code');
+			if (empty($code))
+			{
+				$data['content'] = $this->load->view('auth/activate', null, true);
+				$this->load->view('template', $data);
+				return;
+			}
+		}
+		
+		$activate = $this->ocs_auth->activate($code);
+			
+		if ($activate)
+		{
+			$this->set_msg('success',$this->lang->line('auth_account_activated'));
+			redirect('auth/login/activated');
 		}
 		else
 		{
-			$activate = $this->ocs_auth->activate($code);
-			
-			if ($activate)
-			{
-				$this->session->set_flashdata('message', '<p class="success">Your account has been activated, you may now log in.</p>');
-				redirect('auth/login/activated');
-			}
-			else
-			{
-				$this->session->set_flashdata('message', '<p class="error">That code is either invalid or has already been used.</p>');
-				redirect('auth/activate');
-			}
+			$this->set_msg('error',$this->lang->line('auth_invalid_activation_code'));
+			redirect('auth/activate');
 		}
+		
 	}
-	
+
 	
 	function lostpass()
 	{
@@ -219,12 +191,12 @@
 			
 			if ($result)
 			{
-				$this->session->set_flashdata('message', "<p class='success'>An email has been sent to $email, please check your inbox for instructions.</p>");
+				$this->set_msg('success',$this->lang->line('auth_email_sent_to'). " $email. " . $this->lang->line('auth_check_inbox'));
 				redirect('auth/login/backfromlostpass');
 			}
 			else
 			{
-				$this->session->set_flashdata('message', "<p class='error'>$reason</p>");
+				$this->set_msg('error',$reason);
 				redirect('auth/lostpass');
 			}
 		}
@@ -257,12 +229,12 @@
 			
 			if ($result)
 			{
-				$this->session->set_flashdata('message', "<p class='success'>Your password has been reset.  You may now log in with your new password.");
+				$this->set_msg('success',$this->lang->line('auth_password_reset'));
 				redirect('auth/login/backfromreset');	
 			}
 			else
 			{
-				$this->session->set_flashdata('message', "<p class='error'>$reason</p>");
+				$this->set_msg('error',$reason);
 				redirect('auth/resetpass');
 			}
 		}
@@ -293,7 +265,7 @@
 			
 			if ($result === false)
 			{
-				$this->session->set_flashdata('message', "<p class='error'>$reason</p>");
+				$this->set_msg('error',$reason);
 				redirect('auth/delete');
 			}
 			
@@ -348,6 +320,12 @@
 		}
 	}
 	
+	function set_msg($status = 'error',$message = 'No message')
+	{
+		// shortcut for setting flash message and css class, probably changed in future
+		 $this->session->set_flashdata('message', "<p class='$status'>$message</p>");
+		 log_message('info',"SETMSG: $message");
+	}
 	
 }
 

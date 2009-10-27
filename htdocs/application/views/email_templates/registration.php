@@ -17,7 +17,7 @@ email: <?= $email; ?>
 <P>
 In order to start playing you'll first need to confirm that you received this email.
 <P>
-Either <A HREF="<?= $this->config->site_url(); ?>auth/activatebyclick/<?= $activation ?>">click on this link</A>, or return to the game web site, choose Activate Account when asked to log in, and enter your username and this code:
+Either <A HREF="<?= $this->config->site_url(); ?>auth/activate/<?= $activation ?>">click on this link</A>, or return to the game web site, choose Activate Account when asked to log in, and enter your username and this code:
 <P>
 <b><?= $activation; ?></b>
 <P>

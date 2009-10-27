@@ -33,51 +33,24 @@ class ocs_auth
 {
 	/**
 	* CodeIgniter global
-	*
-	* @var string
 	**/
 	protected $ci;
 	
-	/**
-	* account status ('not_activated', etc ...)
-	*
-	* @var string
-	**/
-	protected $status;
-	
-	/**
-	* __construct
-	*
-	* @return void
-	* @author Mathew of Redux Auth
-	**/
-	
+
 	public function __construct()
 	{
 		$this->ci =& get_instance();
 		$email = $this->ci->config->item('email');
 		$this->ci->load->library('email', $email);
+		$this->ci->lang->load('auth');
 	}
 	
 	
-	/**
-	* Activate user.
-	*
-	* @return void
-	* @author Mathew of Redux Auth
-	**/
 	public function activate($code)
 	{
 		return $this->ci->ocs_auth_model->activate($code);
 	}
 	
-	
-	/**
-	* Deactivate user.
-	*
-	* @return void
-	* @author Mathew of Redux Auth, fixed by AAW
-	**/
 	public function deactivate($identity)
 	{
 	    return $this->ci->ocs_auth_model->deactivate($identity);
@@ -85,11 +58,6 @@ class ocs_auth
 	
 	
 	
-	/**
-	* Delete account
-	*
-	* @author Aaron Wolfe
-	**/
 	public function delete_account($password = false)
 	{
 		// for now all we have is the user itself to remove
@@ -101,51 +69,42 @@ class ocs_auth
 		
 		if ($user_id === false)
 		{
-			return array(false,'user not found');
+			return array(false,$this->ci->lang->line('auth_invalid_login'));
 		}
 				
 		$idcheck = $this->ci->ocs_auth_model->check_password($identity,$password);
 		
 		if ($idcheck === false)
 		{
-			return array(false,'password incorrect');
+			return array(false,$this->ci->lang->line('auth_invalid_login'));
 		}
 		
 		$result = $this->ci->ocs_auth_model->delete_user($user_id);
 		
 		if ($result === false)
 		{
-			return array(false,'error in model while deleting user account');
+			return array(false,$this->ci->lang->line('auth_model_error'));
 		}
 		
         return array(true,null);
 	}
 	
-	
-	
-	/**
-	* forgotten password feature
-	*
-	*
-	* @author rewrite by Aaron Wolfe
-	**/
-	
+
 	public function forgotten_password($email)
 	{
-		// check to see if the email is actually valid, helps to avoid complete failure in next part (as in original) - AAW
 		
 		$useridentity = $this->ci->ocs_auth_model->find_identity_by_column('email',$email);
 		
 		if ($useridentity === false)
 		{
 			$this->ci->ocs_logging->log_message('info',"no matching valid account '$email'");
-			return array(false,'No matching account was found.');
+			return array(false, $this->ci->lang->line('auth_invalid_login'));
 		}
 		
 		if ($this->ci->ocs_auth_model->identity_is_active($useridentity) === false)
 		{
 			$this->ci->ocs_logging->log_message('info',"attempt to reset password on disabled account '$email'");
-			return array(false,'That account is not active.');
+			return array(false,$this->ci->lang->line('auth_invalid_login'));
 		}
 		
 		// function now returns key directly on success
@@ -154,7 +113,7 @@ class ocs_auth
 		if ($forgotten_password_code === false)
 		{
 			$this->ci->ocs_logging->log_message('error',"model failed to set reset code for '$email'");
-			return array(false,'Error in model while trying to get/set password reset code');
+			return array(false,$this->ci->lang->line('auth_model_error'));
 		}
 		else
 		{
@@ -180,7 +139,7 @@ class ocs_auth
 			{
 				// once again, we've no easy way to back out at this point.. later i suppose
 				$this->ci->ocs_logging->log_message('error','error sending password reset email');
-				return array(false,'Error sending password reset email');
+				return array(false,$this->ci->lang->line('auth_email_error'));
 			}
 			
 			$this->ci->ocs_logging->log_message('info',"sent password reset email to '$email'");
@@ -199,7 +158,7 @@ class ocs_auth
 		if ($useridentity === false)
 		{
 			$this->ci->ocs_logging->log_message('info','verification code not found');
-			return array(false,'The verification code is not valid.');
+			return array(false,$this->ci->lang->line('auth_invalid_verification_code'));
 		}
 		
 		$result = $this->ci->ocs_auth_model->set_password($useridentity,$password);
@@ -207,7 +166,7 @@ class ocs_auth
 		if ($result === false)
 		{
 			$this->ci->ocs_logging->log_message('error',"model failed to update password for '$useridentity'");
-			return array(false, 'Model failed to update password');
+			return array(false, $this->ci->lang->line('auth_model_error'));
 		}
 		
 		$this->ci->ocs_logging->log_message('info',"password reset for '$useridentity'");
@@ -215,12 +174,6 @@ class ocs_auth
 	}
 	
 	
-	
-	/**
-	* register
-	*
-	* @author Mathew of Redux Auth, changes by AAW
-	**/
 	
 	public function register($username, $password, $email)
 	{
@@ -231,7 +184,7 @@ class ocs_auth
 		if ($result === false)
 		{
 			$this->ci->ocs_logging->log_message('error','model reports failure registering user');
-			return array(false,'Error adding new user to database');
+			return array(false,$this->ci->lang->line('auth_model_error'));
 		}
 		else
 		{
@@ -244,7 +197,7 @@ class ocs_auth
 				
 				if ($activation_code === false) 
 				{	 
-					return array(false,'Error generating activation code');
+					return array(false, $this->ci->lang->line('auth_model_error'));
 				}
 				
 				$data = array('username' => $username,
@@ -269,60 +222,59 @@ class ocs_auth
 				else
 				{
 					// So we have inserted the user details including the activation code, but can't 
-					// send it to user.. crap?
-					// Really should roll back the DB or something
-					$this->ci->ocs_logging->log_message('error',"error sending registration email to '$email'");
-					return array(false,'An error occured while sending the registration email.');
+					// send it to user.. 
+					
+					// delete the record if we can..
+					$user_id = $this->get_user_id($username);
+					if ($user_id === false)
+					{
+						$this->ci->ocs_logging->log_message('error','error sending reg email, then error finding user id, hmmm');
+					}
+					else
+					{
+						$deltry = $this->delete_user($user_id);
+						if ($deltry === false)
+						{
+							$this->ci->ocs_logging->log_message('error','error sending reg email, found user id but error deleting account.. hmmmmmmm');
+						}
+						else
+						{
+							$this->ci->ocs_logging->log_message('error',"error sending registration email to '$email', deleted account");
+						}
+					}
+					
+					return array(false,$this->ci->lang->line('auth_email_error'));
 				}
 			}
 		}
 	}
-	
-	/**
-	* login
-	*
-	* @return void
-	* @author Mathew of Redux Auth
-	**/
+
+
+
 	public function login($identity, $password)
 	{
 		return $this->ci->ocs_auth_model->login($identity, $password);
 	}
 	
-	/**
-	* logout
-	*
-	* @return void
-	* @author Mathew of Redux Auth
-	**/
+
 	public function logout()
 	{
 	    $identity = $this->ci->config->item('auth_identity_column','ocs');
 	    $this->ci->ocs_logging->log_message('info', "'". $this->ci->session->userdata($identity) . "' logging out");
 	    $this->ci->session->unset_userdata($identity);
+	    $this->ci->session->unset_userdata('user_id');
 		$this->ci->session->sess_destroy();
 	}
 	
 	
-	/**
-	* logged_in
-	*
-	* @return void
-	* @author Mathew of Redux Auth
-	**/
 	
 	public function logged_in()
 	{
+		// check for logged in..
 	    $identity = $this->ci->config->item('auth_identity_column','ocs');
 		return ($this->ci->session->userdata($identity)) ? true : false;
 	}
 	
-	/**
-	* Profile
-	*
-	* @return void
-	* @author Mathew of Redux Auth
-	**/
 	
 	public function profile()
 	{
@@ -336,8 +288,6 @@ class ocs_auth
 	/**
 	* get_languages - return array of available language choices
 	* accepts ip address, future versions may recommend based on geoip
-	*
-	* @author Aaron Wolfe
 	**/
 	
 	public function get_languages($client_ip = false)
