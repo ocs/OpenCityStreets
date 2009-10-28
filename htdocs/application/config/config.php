@@ -202,11 +202,14 @@ $config['log_date_format'] = 'Y-m-d H:i:s';
 | Extra information for Logs
 |--------------------------------------------------------------------------
 |
-| OCS addition:  func will add class and function message is coming from, line will add file and line.
-|
+| OCS additions:  
+|   func will add class and function message is coming from, line will add file and line.
+|   use_syslog and syslog_facility will take precedence over filename
 */
 $config['log_backtrace_func'] = TRUE;
 $config['log_backtrace_line'] = FALSE;
+$config['log_use_syslog'] = TRUE;
+$config['log_syslog_facility'] = LOG_LOCAL0;
 
 /*
 |--------------------------------------------------------------------------
