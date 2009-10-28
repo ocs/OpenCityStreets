@@ -97,13 +97,13 @@ class ocs_auth
 		
 		if ($useridentity === false)
 		{
-			$this->ci->ocs_logging->log_message('info',"no matching valid account '$email'");
+			log_message('info',"no matching valid account '$email'");
 			return array(false, $this->ci->lang->line('auth_invalid_login'));
 		}
 		
 		if ($this->ci->ocs_auth_model->identity_is_active($useridentity) === false)
 		{
-			$this->ci->ocs_logging->log_message('info',"attempt to reset password on disabled account '$email'");
+			log_message('info',"attempt to reset password on disabled account '$email'");
 			return array(false,$this->ci->lang->line('auth_invalid_login'));
 		}
 		
@@ -112,7 +112,7 @@ class ocs_auth
 		
 		if ($forgotten_password_code === false)
 		{
-			$this->ci->ocs_logging->log_message('error',"model failed to set reset code for '$email'");
+			log_message('error',"model failed to set reset code for '$email'");
 			return array(false,$this->ci->lang->line('auth_model_error'));
 		}
 		else
@@ -138,11 +138,11 @@ class ocs_auth
 			if ($emailresult === false)
 			{
 				// once again, we've no easy way to back out at this point.. later i suppose
-				$this->ci->ocs_logging->log_message('error','error sending password reset email');
+				log_message('error','error sending password reset email');
 				return array(false,$this->ci->lang->line('auth_email_error'));
 			}
 			
-			$this->ci->ocs_logging->log_message('info',"sent password reset email to '$email'");
+			log_message('info',"sent password reset email to '$email'");
 			return array(true,null);
 		}
 	}
@@ -157,7 +157,7 @@ class ocs_auth
 		
 		if ($useridentity === false)
 		{
-			$this->ci->ocs_logging->log_message('info','verification code not found');
+			log_message('info','verification code not found');
 			return array(false,$this->ci->lang->line('auth_invalid_verification_code'));
 		}
 		
@@ -165,11 +165,11 @@ class ocs_auth
 		
 		if ($result === false)
 		{
-			$this->ci->ocs_logging->log_message('error',"model failed to update password for '$useridentity'");
+			log_message('error',"model failed to update password for '$useridentity'");
 			return array(false, $this->ci->lang->line('auth_model_error'));
 		}
 		
-		$this->ci->ocs_logging->log_message('info',"password reset for '$useridentity'");
+		log_message('info',"password reset for '$useridentity'");
 		return array(true,null);
 	}
 	
@@ -183,7 +183,7 @@ class ocs_auth
 		$result = $this->ci->ocs_auth_model->register($username, $password, $email);
 		if ($result === false)
 		{
-			$this->ci->ocs_logging->log_message('error','model reports failure registering user');
+			log_message('error','model reports failure registering user');
 			return array(false,$this->ci->lang->line('auth_model_error'));
 		}
 		else
@@ -216,7 +216,7 @@ class ocs_auth
 				
 				if ($this->ci->email->send())
 				{
-					$this->ci->ocs_logging->log_message('info',"sent registration email for new user '$username' to '$email'");
+					log_message('info',"sent registration email for new user '$username' to '$email'");
 					return array(true,null);
 				}
 				else
@@ -228,18 +228,18 @@ class ocs_auth
 					$user_id = $this->get_user_id($username);
 					if ($user_id === false)
 					{
-						$this->ci->ocs_logging->log_message('error','error sending reg email, then error finding user id, hmmm');
+						log_message('error','error sending reg email, then error finding user id, hmmm');
 					}
 					else
 					{
 						$deltry = $this->delete_user($user_id);
 						if ($deltry === false)
 						{
-							$this->ci->ocs_logging->log_message('error','error sending reg email, found user id but error deleting account.. hmmmmmmm');
+							log_message('error','error sending reg email, found user id but error deleting account.. hmmmmmmm');
 						}
 						else
 						{
-							$this->ci->ocs_logging->log_message('error',"error sending registration email to '$email', deleted account");
+							log_message('error',"error sending registration email to '$email', deleted account");
 						}
 					}
 					
@@ -260,7 +260,7 @@ class ocs_auth
 	public function logout()
 	{
 	    $identity = $this->ci->config->item('auth_identity_column','ocs');
-	    $this->ci->ocs_logging->log_message('info', "'". $this->ci->session->userdata($identity) . "' logging out");
+	    log_message('info', "'". $this->ci->session->userdata($identity) . "' logging out");
 	    $this->ci->session->unset_userdata($identity);
 	    $this->ci->session->unset_userdata('user_id');
 		$this->ci->session->sess_destroy();

@@ -94,7 +94,7 @@ class ocs_auth_model extends Model
 	    
 		if ($this->identity_check($useridentity) == false)
 		{
-			$this->ocs_logging->log_message('error','asked to set password for nonexistant user?');
+			log_message('error','asked to set password for nonexistant user?');
 			return false;
 		}
 		
@@ -113,7 +113,7 @@ class ocs_auth_model extends Model
 		}
 		else
 		{
-			$this->ocs_logging->log_message('error','error updating user record with new password');
+			log_message('error','error updating user record with new password');
             return false;
 		}
 	}
@@ -164,12 +164,12 @@ class ocs_auth_model extends Model
 		
 		if ($this->db->affected_rows() == 1)
 		{
-			$this->ocs_logging->log_message('info',"activated user '$identity'");
+			log_message('info',"activated user '$identity'");
 			return true;
 		}
 		else
 		{
-			$this->ocs_logging->log_message('error','db error activating user account');
+			log_message('error','db error activating user account');
 			return false;
 		}
 	}
@@ -199,12 +199,12 @@ class ocs_auth_model extends Model
 		
 		if ($this->db->affected_rows() == 1)
 		{
-			$this->ocs_logging->log_message('info',"deactivated user '$username'");
+			log_message('info',"deactivated user '$username'");
 			return($activation_code);
 		}
 		else
 		{
-			$this->ocs_logging->log_message('error','db error deactivating user account');
+			log_message('error','db error deactivating user account');
 			return false;
 		}
 	}
@@ -389,14 +389,14 @@ class ocs_auth_model extends Model
 	    
 	    if ($email === false)
 	    {
-	    	$this->ocs_logging->log_message('info','no email specified?');
+	    	log_message('info','no email specified?');
 	        return false;
 	    }
 
 	    // dont let users who aren't active (or don't exist) reset passwords - AAW
 	    if ($this->identity_is_active($this->find_identity_by_column('email',$email)) === false)
 	    {
-	    	$this->ocs_logging->log_message('info',"password reset attempt by invalid/inactive user '$email'");
+	    	log_message('info',"password reset attempt by invalid/inactive user '$email'");
 	        return false;
 	    }
 	    
@@ -408,12 +408,12 @@ class ocs_auth_model extends Model
 		
 		if ($this->db->affected_rows() == 1)
 		{
-			$this->ocs_logging->log_message('info',"inserted forgotten pw key for '$email'");
+			log_message('info',"inserted forgotten pw key for '$email'");
 			return($key);
 		}
 		else
 		{
-			$this->ocs_logging->log_message('error','failed to insert forgotten pw key');
+			log_message('error','failed to insert forgotten pw key');
 			return false;
 		}
 	}
@@ -472,7 +472,7 @@ class ocs_auth_model extends Model
 		}
 		else
 		{
-			$this->ocs_logging->log_message('error','db error getting user profile');
+			log_message('error','db error getting user profile');
 			return false;
 		}
 	}
@@ -499,7 +499,7 @@ class ocs_auth_model extends Model
 	    
 	    if ($username === false || $password === false || $email === false)
 	    {
-	    	$this->ocs_logging->log_message('info', 'missing parameters?');
+	    	log_message('info', 'missing parameters?');
 	        return false;
 	    }
 	    
@@ -528,11 +528,11 @@ class ocs_auth_model extends Model
 		
 		if ($id === false)
 		{
-			$this->ocs_logging->log_message('error', 'insert new user reg failed');
+			log_message('error', 'insert new user reg failed');
 			return false;
 		}
 		
-		$this->ocs_logging->log_message('info', "inserted user record $id");
+		log_message('info', "inserted user record $id");
 		
 		$data = array($meta_join => $id);
 		
@@ -555,7 +555,7 @@ class ocs_auth_model extends Model
 	        	}
 	        	else
 	        	{
-	        		$this->ocs_logging->log_message('debug', "no default or post value for '$input'");
+	        		log_message('debug', "no default or post value for '$input'");
 	        	}	
 	        }
 	    }
@@ -564,16 +564,16 @@ class ocs_auth_model extends Model
 		
 		if ($this->db->affected_rows() > 0)
 		{
-			$this->ocs_logging->log_message('info',"new registration, $id / $username / $email");
+			log_message('info',"new registration, $id / $username / $email");
 			return true;
 		}
 		else
 		{
-			$this->ocs_logging->log_message('error',"insert new user meta record failed for userid $id, attempting to remove user");
+			log_message('error',"insert new user meta record failed for userid $id, attempting to remove user");
 			
 			if ($this->delete_user($id) === false)
 			{
-				$this->ocs_logging->log_message('error',"also failed to remove new user record $id, not good.");
+				log_message('error',"also failed to remove new user record $id, not good.");
 			}
 			
 			return false;
@@ -598,7 +598,7 @@ class ocs_auth_model extends Model
 	    // we have paramters
 	    if ($identity === false || $password === false)
 	    {
-	    	$this->ocs_logging->log_message('error','login attempt with null credentials?');
+	    	log_message('error','login attempt with null credentials?');
 	        return false;
 	    }
 	    
@@ -606,21 +606,21 @@ class ocs_auth_model extends Model
 	    $user_id = $this->get_user_id($identity);
 	    if ($user_id === false)
 	    {
-	    	$this->ocs_logging->log_message('info',"login attempt by invalid user '$identity'");
+	    	log_message('info',"login attempt by invalid user '$identity'");
 	        return false;
 	    }	
 	    
 	    // user is active?
 	    if ($this->identity_is_active($identity) === false)
 	    {
-	    	$this->ocs_logging->log_message('info',"login attempt by disabled user '$identity'");
+	    	log_message('info',"login attempt by disabled user '$identity'");
 	        return false;
 	    }
 	    
 	    // user knows their password?
 	    if ($this->check_password($identity,$password) === true)
 	    {
-    		$this->ocs_logging->log_message('info',"user '$identity' logged in");
+    		log_message('info',"user '$identity' logged in");
     		
     		// handle login.. for now just setup session
     	    $this->session->set_userdata($identity_column,  $identity);
@@ -628,7 +628,7 @@ class ocs_auth_model extends Model
     	    return true;
     	}
     	
-        $this->ocs_logging->log_message('info',"login attempt with bad password by user '$identity'");
+        log_message('info',"login attempt with bad password by user '$identity'");
     	return false;		
 	}
 
@@ -718,7 +718,7 @@ class ocs_auth_model extends Model
 		$meta_table		= $this->config->item('auth_meta_table','ocs');
 	    $meta_join		= $this->config->item('auth_meta_join','ocs');
 	    
-	    $this->ocs_logging->log_message('error',"asked to delete user id '$id'");
+	    log_message('error',"asked to delete user id '$id'");
 	    
 		if ($id === false)
 		{
@@ -730,7 +730,7 @@ class ocs_auth_model extends Model
 		
 		if ($this->db->affected_rows() != 1)
 		{
-			$this->ocs_logging->log_message('error', $this->db->affected_rows() . " rows affected when deleting meta data for user $id");
+			log_message('error', $this->db->affected_rows() . " rows affected when deleting meta data for user $id");
 		}
 		
 		// remove user record
@@ -738,11 +738,11 @@ class ocs_auth_model extends Model
 	
 		if ($this->db->affected_rows() != 1)
 		{
-			$this->ocs_logging->log_message('error', $this->db->affected_rows() . " rows affected when deleting user $id");
+			log_message('error', $this->db->affected_rows() . " rows affected when deleting user $id");
 			return false;
 		}
 	
-		$this->ocs_logging->log_message('info',"deleted user $id");
+		log_message('info',"deleted user $id");
 		return true;
 	}
 	

@@ -33,10 +33,6 @@ $config['ocs']['gamename']      = "Open City Streets";
 $config['ocs']['version']       = "0.01";  
 $config['ocs']['motd']		= "Work in progress, expect errors";
 
-// improve on built in logging, maybe performance penalty
-$config['ocs']['log_backtrace']	= 1;
-
-
 //  Outbound email settings - some to be moved into language file
 
 $config['ocs']['email_template_dir'] = 'email_templates/';

@@ -43,7 +43,7 @@
 |	$autoload['libraries'] = array('database', 'session', 'xmlrpc');
 */
 
-$autoload['libraries'] = array('database', 'session', 'ocs_auth', 'form_validation', 'ocs_logging');
+$autoload['libraries'] = array('database', 'session', 'ocs_auth', 'form_validation');
 
 /*
 | -------------------------------------------------------------------
